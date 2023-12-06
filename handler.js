@@ -10,14 +10,13 @@ const db = admin.firestore();
 async function createRecipe(req, res) {
   try {
     // Handle create recipe logic
-    const keywords = recipe.recipe.toLowerCase().split(' ');
+    const keywords = req.body.recipe.toLowerCase().split(' ');
     const ingredientArray = req.body.ingredient.split(',').map((ingredient) => ingredient.trim());
     const stepArray = req.body.step.split(';').map((step) => step.trim());
 
     await db.collection('reciderRecipe').doc(`/${Date.now()}/`).create({
       id: Date.now(),
       recipe: req.body.recipe,
-      recipeLower: req.body.recipe.toLowerCase(),
       keywords: keywords,
       image: req.body.image,
       ingredient: ingredientArray,
@@ -44,7 +43,6 @@ async function createMultipleRecipes(req, res) {
       await db.collection('reciderRecipe').doc(`/${Date.now()}/`).create({
         id: Date.now(),
         recipe: recipe.recipe,
-        recipeLower: recipe.recipe.toLowerCase(),
         keywords: keywords,
         image: recipe.image,
         ingredient: ingredientArray,
@@ -80,22 +78,29 @@ async function getAllRecipes(req, res) {
 
 async function searchRecipe(req, res) {
   try {
-    const searchTerms = req.params.recipeLower.split(" ");
+    const searchTerms = req.params.recipe.split(" ");
 
+    // Build a dynamic query for each search term
     const keywordQueries = searchTerms.map((term) => {
-      return db.collection("reciderRecipe").where("keywords", "array-contains", term.toLowerCase()).get();
+      return db.collection("reciderRecipe").where("keywords", "array-contains", term.toLowerCase());
     });
 
-    const results = await Promise.all(keywordQueries);
+    // Execute all queries in parallel
+    const results = await Promise.all(keywordQueries.map((query) => query.get()));
 
-    const mergedResults = results.flatMap((querySnapshot) => {
-      return querySnapshot.docs.map((doc) => ({
+    // Merge and filter the results
+    const mergedResults = results.reduce((acc, querySnapshot) => {
+      const matchingDocs = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         recipe: doc.data().recipe,
         image: doc.data().image,
         // Add other fields as needed
       }));
-    });
+
+      // Filter the accumulated results to keep only those matching the current search term
+      return acc.filter((result) => matchingDocs.some((doc) => doc.id === result.id));
+    }, results[0].docs.map((doc) => ({ id: doc.id, recipe: doc.data().recipe, image: doc.data().image })));
+
 
     if (mergedResults.length > 0) {
       return res.status(200).json({
