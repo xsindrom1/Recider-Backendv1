@@ -121,9 +121,9 @@ async function searchRecipe(req, res) {
 
 async function getRecipeById(req, res) {
   try {
-    const reqDoc = db.collection('reciderRecipe').doc(req.params.id);
-    const reciderRecipe = await reqDoc.get();
-    const response = reciderRecipe.data();
+    const reqDoc = db.collection('reciderRecipe').doc(req.params.id); // Corrected collection name
+    const recidoRecipe = await reqDoc.get();
+    const response = recidoRecipe.data();
 
     return res.status(200).send({ status: 'Success', data: response });
   } catch (error) {
@@ -131,6 +131,7 @@ async function getRecipeById(req, res) {
     res.status(500).send({ status: 'Failed', msg: error });
   }
 }
+
 
 module.exports = {
   createRecipe,
