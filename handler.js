@@ -7,9 +7,9 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
+// API to create recipe
 async function createRecipe(req, res) {
   try {
-    // Handle create recipe logic
     const keywords = req.body.recipe.toLowerCase().split(' ');
     const ingredientArray = req.body.ingredient.split(',').map((ingredient) => ingredient.trim());
     const stepArray = req.body.step.split(';').map((step) => step.trim());
@@ -30,9 +30,10 @@ async function createRecipe(req, res) {
   }
 }
 
+
+// API to create multiple recipes
 async function createMultipleRecipes(req, res) {
   try {
-    // Handle create multiple recipes logic
     const recipes = req.body.recipes;
 
     for (const recipe of recipes) {
@@ -57,9 +58,9 @@ async function createMultipleRecipes(req, res) {
   }
 }
 
+// API to get All Recipes
 async function getAllRecipes(req, res) {
   try {
-    // Handle get all recipes logic
     const recipesRef = db.collection('reciderRecipe');
     const querySnapshot = await recipesRef.get();
 
@@ -76,11 +77,11 @@ async function getAllRecipes(req, res) {
   }
 }
 
+// API to search recipe name
 async function searchRecipe(req, res) {
   try {
     const searchTerms = req.params.recipe.split(" ");
 
-    // Build a dynamic query for each search term
     const keywordQueries = searchTerms.map((term) => {
       return db.collection("reciderRecipe").where("keywords", "array-contains", term.toLowerCase());
     });
@@ -94,7 +95,6 @@ async function searchRecipe(req, res) {
         id: doc.id,
         recipe: doc.data().recipe,
         image: doc.data().image,
-        // Add other fields as needed
       }));
 
       // Filter the accumulated results to keep only those matching the current search term
@@ -126,7 +126,7 @@ async function searchRecipe(req, res) {
 
 async function getRecipeById(req, res) {
   try {
-    const reqDoc = db.collection('reciderRecipe').doc(req.params.id); // Corrected collection name
+    const reqDoc = db.collection('reciderRecipe').doc(req.params.id);
     const recidoRecipe = await reqDoc.get();
     const response = recidoRecipe.data();
 
