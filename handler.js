@@ -23,10 +23,10 @@ async function createRecipe(req, res) {
       step: stepArray,
     });
 
-    return res.status(200).send({ status: 'Success', msg: 'Data Saved' });
+    return res.status(200).send({ status: 'Success', message: 'Data Saved' });
   } catch (error) {
     console.log(error);
-    res.status(500).send({ status: 'Failed', msg: error });
+    res.status(500).send({ status: 'Failed', message: error });
   }
 }
 
@@ -51,10 +51,10 @@ async function createMultipleRecipes(req, res) {
       });
     }
 
-    return res.status(200).send({ status: 'Success', msg: 'Recipes Saved' });
+    return res.status(200).send({ status: 'Success', message: 'Recipes Saved' });
   } catch (error) {
     console.log('Error in createMultiple route:', error);
-    res.status(500).send({ status: 'Failed', msg: error });
+    res.status(500).send({ status: 'Failed', message: error });
   }
 }
 
@@ -73,7 +73,7 @@ async function getAllRecipes(req, res) {
     return res.status(200).json({ status: 'Success', data: allRecipes });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ status: 'Failed', msg: error.message });
+    return res.status(500).json({ status: 'Failed', message: error.message });
   }
 }
 
@@ -110,14 +110,14 @@ async function searchRecipe(req, res) {
     } else {
       return res.status(404).json({
         status: "Failed",
-        msg: "No recipe details match the provided search terms.",
+        message: "No recipe details match the provided search terms.",
       });
     }
   } catch (error) {
     console.error(error);
     res.status(500).json({
       status: "Failed",
-      msg: error.message,
+      message: error.message,
     });
   }
 }
@@ -133,7 +133,7 @@ async function getRecipeById(req, res) {
     return res.status(200).send({ status: 'Success', data: response });
   } catch (error) {
     console.log(error);
-    res.status(500).send({ status: 'Failed', msg: error });
+    res.status(500).send({ status: 'Failed', message: error });
   }
 }
 
