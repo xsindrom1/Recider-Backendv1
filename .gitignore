@@ -1,2 +1,6 @@
 serviceAccountKey.json
 node_modules/
+vectorizer.joblib
+recido.json
+knn_model.joblib
+.venv

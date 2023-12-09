@@ -1,4 +1,4 @@
-const { createRecipe, createMultipleRecipes, getAllRecipes, searchRecipe, getRecipeById } = require('./handler');
+const { createRecipe, createMultipleRecipes, getAllRecipes, searchRecipe, getRecipeById } = require('./food.controller');
 
 function setupRoutes(app) {
   app.post('/api/create', createRecipe);

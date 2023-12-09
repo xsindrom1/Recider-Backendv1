@@ -1,5 +1,5 @@
 const admin = require('firebase-admin');
-const serviceAccount = require('./serviceAccountKey.json');
+const serviceAccount = require('../../serviceAccountKey.json');
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -11,7 +11,7 @@ const db = admin.firestore();
 async function createRecipe(req, res) {
   try {
     const keywords = req.body.recipe.toLowerCase().split(' ');
-    const ingredientArray = req.body.ingredient.split(',').map((ingredient) => ingredient.trim());
+    const ingredientArray = req.body.ingredient.split(';').map((ingredient) => ingredient.trim());
     const stepArray = req.body.step.split(';').map((step) => step.trim());
 
     await db.collection('reciderRecipe').doc(`/${Date.now()}/`).create({
