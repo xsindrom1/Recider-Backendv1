@@ -12,7 +12,6 @@ app.use(cors());
 app.use(express.json());
 app.use(bodyParser.json());
 
-const csvPath = process.env.CSV_PATH || path.join(__dirname, 'default_path', 'recido.csv');
 
 app.post('/recommend', async (req, res) => {
   const inputData = {
