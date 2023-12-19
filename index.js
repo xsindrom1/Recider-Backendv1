@@ -12,22 +12,32 @@ app.use(cors());
 app.use(express.json());
 app.use(bodyParser.json());
 
-const csvPath = process.env.CSV_PATH || path.join(__dirname, 'default_path', 'recido.csv');
-
 app.post('/recommend', async (req, res) => {
   const inputData = {
     ingredients: req.body.ingredients
   };
-
   try {
-    // Make a request to Flask API
+    if (inputData.ingredients && inputData.ingredients[0] === "") {
+      return res.status(400).json({ error: "Bahan makanan tidak dimasukkan." });
+    }
+
     const response = await axios.post('http://127.0.0.1:5000/recommend', inputData);
 
-    // Send the response from Flask API to the client
-    res.status(200).json(response.data);
+    if (response.status >= 200 && response.status < 300) {
+      return res.status(200).json(response.data);
+    } else {
+      // Handle other non-2xx errors, including 404
+      console.error('Error making request to Flask API. Status:', response.status);
+      return res.status(response.status).json({ error: 'Resep makanan tidak ditemukan.' });
+    }
   } catch (error) {
-    console.error('Error making request to Flask API:', error.message);
-    res.status(500).json({ error: 'Internal Server Error' });
+    // Handle network errors or other unexpected issues
+    if (error.response && error.response.status === 404) {
+      return res.status(404).json({ error: 'Resep makanan tidak ditemukan.' });
+    } else {
+      console.error('Error making request to Flask API:', error.message);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
   }
 });
 
