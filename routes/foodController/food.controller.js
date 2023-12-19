@@ -1,5 +1,5 @@
 const admin = require('firebase-admin');
-const serviceAccount = require('./serviceAccountKey.json');
+const serviceAccount = require('../../serviceAccountKey.json');
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -7,33 +7,33 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
+// API to create recipe
 async function createRecipe(req, res) {
   try {
-    // Handle create recipe logic
-    const keywords = recipe.recipe.toLowerCase().split(' ');
-    const ingredientArray = req.body.ingredient.split(',').map((ingredient) => ingredient.trim());
+    const keywords = req.body.recipe.toLowerCase().split(' ');
+    const ingredientArray = req.body.ingredient.split(';').map((ingredient) => ingredient.trim());
     const stepArray = req.body.step.split(';').map((step) => step.trim());
 
     await db.collection('reciderRecipe').doc(`/${Date.now()}/`).create({
       id: Date.now(),
       recipe: req.body.recipe,
-      recipeLower: req.body.recipe.toLowerCase(),
       keywords: keywords,
       image: req.body.image,
       ingredient: ingredientArray,
       step: stepArray,
     });
 
-    return res.status(200).send({ status: 'Success', msg: 'Data Saved' });
+    return res.status(200).send({ status: 'Success', message: 'Data Saved' });
   } catch (error) {
     console.log(error);
-    res.status(500).send({ status: 'Failed', msg: error });
+    res.status(500).send({ status: 'Failed', message: error });
   }
 }
 
+
+// API to create multiple recipes
 async function createMultipleRecipes(req, res) {
   try {
-    // Handle create multiple recipes logic
     const recipes = req.body.recipes;
 
     for (const recipe of recipes) {
@@ -44,7 +44,6 @@ async function createMultipleRecipes(req, res) {
       await db.collection('reciderRecipe').doc(`/${Date.now()}/`).create({
         id: Date.now(),
         recipe: recipe.recipe,
-        recipeLower: recipe.recipe.toLowerCase(),
         keywords: keywords,
         image: recipe.image,
         ingredient: ingredientArray,
@@ -52,16 +51,16 @@ async function createMultipleRecipes(req, res) {
       });
     }
 
-    return res.status(200).send({ status: 'Success', msg: 'Recipes Saved' });
+    return res.status(200).send({ status: 'Success', message: 'Recipes Saved' });
   } catch (error) {
     console.log('Error in createMultiple route:', error);
-    res.status(500).send({ status: 'Failed', msg: error });
+    res.status(500).send({ status: 'Failed', message: error });
   }
 }
 
+// API to get All Recipes
 async function getAllRecipes(req, res) {
   try {
-    // Handle get all recipes logic
     const recipesRef = db.collection('reciderRecipe');
     const querySnapshot = await recipesRef.get();
 
@@ -74,28 +73,34 @@ async function getAllRecipes(req, res) {
     return res.status(200).json({ status: 'Success', data: allRecipes });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ status: 'Failed', msg: error.message });
+    return res.status(500).json({ status: 'Failed', message: error.message });
   }
 }
 
+// API to search recipe name
 async function searchRecipe(req, res) {
   try {
-    const searchTerms = req.params.recipeLower.split(" ");
+    const searchTerms = req.params.recipe.split(" ");
 
     const keywordQueries = searchTerms.map((term) => {
-      return db.collection("reciderRecipe").where("keywords", "array-contains", term.toLowerCase()).get();
+      return db.collection("reciderRecipe").where("keywords", "array-contains", term.toLowerCase());
     });
 
-    const results = await Promise.all(keywordQueries);
+    // Execute all queries in parallel
+    const results = await Promise.all(keywordQueries.map((query) => query.get()));
 
-    const mergedResults = results.flatMap((querySnapshot) => {
-      return querySnapshot.docs.map((doc) => ({
+    // Merge and filter the results
+    const mergedResults = results.reduce((acc, querySnapshot) => {
+      const matchingDocs = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         recipe: doc.data().recipe,
         image: doc.data().image,
-        // Add other fields as needed
       }));
-    });
+
+      // Filter the accumulated results to keep only those matching the current search term
+      return acc.filter((result) => matchingDocs.some((doc) => doc.id === result.id));
+    }, results[0].docs.map((doc) => ({ id: doc.id, recipe: doc.data().recipe, image: doc.data().image })));
+
 
     if (mergedResults.length > 0) {
       return res.status(200).json({
@@ -105,14 +110,14 @@ async function searchRecipe(req, res) {
     } else {
       return res.status(404).json({
         status: "Failed",
-        msg: "No recipe details match the provided search terms.",
+        message: "No recipe details match the provided search terms.",
       });
     }
   } catch (error) {
     console.error(error);
     res.status(500).json({
       status: "Failed",
-      msg: error.message,
+      message: error.message,
     });
   }
 }
@@ -121,14 +126,14 @@ async function searchRecipe(req, res) {
 
 async function getRecipeById(req, res) {
   try {
-    const reqDoc = db.collection('reciderRecipe').doc(req.params.id); // Corrected collection name
+    const reqDoc = db.collection('reciderRecipe').doc(req.params.id);
     const recidoRecipe = await reqDoc.get();
     const response = recidoRecipe.data();
 
     return res.status(200).send({ status: 'Success', data: response });
   } catch (error) {
     console.log(error);
-    res.status(500).send({ status: 'Failed', msg: error });
+    res.status(500).send({ status: 'Failed', message: error });
   }
 }
 
